@@ -32,7 +32,6 @@ const KEYCODE_MAP = {
   TAB: "VK_TAB",
   ENTER: "VK_RETURN",
   ESCAPE: "VK_ESCAPE",
-  SPACE: "VK_SPACE",
   ARROWLEFT: "VK_LEFT",
   ARROWRIGHT: "VK_RIGHT",
   ARROWUP: "VK_UP",
@@ -556,7 +555,13 @@ class KeyShortcut {
   static keyToDisplayString(key, keycode) {
     let str = "";
     if (key) {
-      str += key.toUpperCase();
+      switch (key) {
+        case " ":
+          str += AppConstants.platform == "macosx" ? "␣" : "Space";
+          break;
+        default:
+          str += key.toUpperCase();
+      }
     } else if (keycode) {
       // Get the key from the value
       for (let [k, value] of Object.entries(KEYCODE_MAP)) {
@@ -580,9 +585,6 @@ class KeyShortcut {
               break;
             case "enter":
               str += AppConstants.platform == "macosx" ? "↩" : "Enter";
-              break;
-            case "space":
-              str += AppConstants.platform == "macosx" ? "␣" : "Space";
               break;
             default:
               str += normalizedKey;
