@@ -43,6 +43,10 @@ const KEYCODE_MAP = {
   SCROLL_LOCK: "VK_SCROLL",
 };
 
+const REVERSE_KEYCODE_MAP = Object.fromEntries(
+  Object.entries(KEYCODE_MAP).map(([k, v]) => [v, k])
+);
+
 const defaultKeyboardGroups = {
   windowAndTabManagement: [
     "zen-window-new-shortcut",
@@ -1509,9 +1513,11 @@ window.gZenKeyboardShortcutsManager = {
         continue;
       }
 
+      const keyNameOrCode = targetShortcut.getKeyNameOrCode();
+      const key = REVERSE_KEYCODE_MAP[keyNameOrCode] ?? keyNameOrCode;
       if (
         targetShortcut.getModifiers().equals(modifiers) &&
-        targetShortcut.getKeyNameOrCode()?.toLowerCase() == realShortcut
+        key?.toLowerCase() == realShortcut
       ) {
         return {
           hasConflicts: true,
