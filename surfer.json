@@ -1,8 +1,8 @@
 {
-  "name": "Zen Browser",
-  "vendor": "Zen OSS Team",
-  "appId": "zen",
-  "binaryName": "zen",
+  "name": "Itran Browser",
+  "vendor": "Itran OSS",
+  "appId": "itran",
+  "binaryName": "itran",
   "version": {
     "product": "firefox",
     "version": "151.0.1",
@@ -15,14 +15,14 @@
   "addons": {},
   "brands": {
     "release": {
-      "backgroundColor": "#282A33",
-      "brandShorterName": "Zen",
-      "brandShortName": "Zen",
-      "brandFullName": "Zen Browser",
+      "backgroundColor": "#0a0a0b",
+      "brandShorterName": "Itran",
+      "brandShortName": "Itran",
+      "brandFullName": "Itran Browser",
       "release": {
-        "displayVersion": "1.20b",
+        "displayVersion": "1.0.0",
         "github": {
-          "repo": "zen-browser/desktop"
+          "repo": "accnumber4441-del/itran-browser"
         },
         "archives": {
           "windows": "windows.mar",
@@ -35,14 +35,14 @@
       }
     },
     "twilight": {
-      "backgroundColor": "#282A33",
-      "brandShorterName": "Zen",
-      "brandShortName": "Twilight",
-      "brandFullName": "Zen Twilight",
+      "backgroundColor": "#0a0a0b",
+      "brandShorterName": "Itran",
+      "brandShortName": "Nightly",
+      "brandFullName": "Itran Nightly",
       "release": {
-        "displayVersion": "1.21t",
+        "displayVersion": "1.1.0",
         "github": {
-          "repo": "zen-browser/desktop"
+          "repo": "accnumber4441-del/itran-browser"
         }
       }
     }
@@ -53,5 +53,5 @@
     ],
     "licenseType": "MPL-2.0"
   },
-  "updateHostname": "updates.zen-browser.app"
+  "updateHostname": "updates.itran.site"
 }
