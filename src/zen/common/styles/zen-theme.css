@@ -12,13 +12,13 @@
 :root {
   /* Default values */
   --zen-border-radius: 7px;
-  --zen-primary-color: AccentColor;
+  --zen-primary-color: #6b7dff;
 
   --zen-background-opacity: 1;
 
   /* Branding */
-  --zen-branding-dark: #101010;
-  --zen-branding-paper: #e2e2e2;
+  --zen-branding-dark: #0a0a0c;
+  --zen-branding-paper: #f0efed;
 
   --zen-branding-bg: light-dark(var(--zen-branding-paper), var(--zen-branding-dark));
   --zen-branding-bg-reverse: light-dark(var(--zen-branding-dark), var(--zen-branding-paper));
@@ -59,10 +59,10 @@
     color-mix(in srgb, var(--zen-primary-color) 1%, var(--zen-branding-bg) 99%)
   );
 
-  --zen-dialog-background: light-dark(#fafbff, #1c1c1c);
+  --zen-dialog-background: light-dark(#fafbff, #111114);
   --zen-urlbar-background: light-dark(
     color-mix(in srgb, var(--zen-primary-color) 3%, #f4f4f4 97%),
-    color-mix(in srgb, var(--zen-primary-color) 4%, rgb(24, 24, 24) 96%)
+    color-mix(in srgb, var(--zen-primary-color) 4%, rgb(18, 18, 20) 96%)
   );
 
   --zen-secondary-btn-color: var(--zen-colors-primary-foreground);
@@ -202,7 +202,7 @@
   --zen-hidden-toolbar-transition: var(--zen-hidden-toolbar-transition-duration) ease-in-out;
 
   /* XUL */
-  --zen-main-browser-background: light-dark(rgb(235, 235, 235), #1b1b1b);
+  --zen-main-browser-background: light-dark(rgb(235, 235, 235), #0f0f11);
   --zen-main-browser-background-toolbar: var(--zen-main-browser-background);
 
   --browser-area-z-index-toolbox: 2 !important;
@@ -217,7 +217,7 @@
   --tab-close-button-padding: 4px !important;
 
   --input-border-color: var(--zen-input-border-color) !important;
-  --zen-themed-toolbar-bg-transparent: light-dark(var(--zen-branding-bg), #171717);
+  --zen-themed-toolbar-bg-transparent: light-dark(var(--zen-branding-bg), #121214);
 
   --zen-workspace-indicator-height: 44px;
 
@@ -228,24 +228,23 @@
   --toolbar-field-color: var(--toolbox-textcolor) !important;
 
   &[zen-private-window='true'] {
-    --zen-main-browser-background: color-mix(in srgb, rgb(11, 10, 11) 90%, var(--zen-themed-toolbar-bg-transparent));
+    --zen-main-browser-background: color-mix(in srgb, rgb(8, 8, 10) 90%, var(--zen-themed-toolbar-bg-transparent));
     --zen-main-browser-background-toolbar: var(--zen-main-browser-background);
-    --zen-primary-color: rgb(11, 10, 11) !important;
-    /* Make sure its in sync with getToolbarColor */
+    --zen-primary-color: rgb(8, 8, 10) !important;
     --toolbox-textcolor: rgba(255, 255, 255, 0.8) !important;
     --toolbar-color-scheme: dark !important;
   }
 
   &[zen-unsynced-window='true'] {
-    --zen-main-browser-background: color-mix(in srgb, light-dark(rgb(196, 202, 229), rgb(8, 9, 40)) 60%, var(--zen-themed-toolbar-bg-transparent));
+    --zen-main-browser-background: color-mix(in srgb, light-dark(rgb(196, 202, 229), rgb(12, 12, 14)) 60%, var(--zen-themed-toolbar-bg-transparent));
     --zen-main-browser-background-toolbar: var(--zen-main-browser-background);
-    --zen-primary-color: light-dark(rgb(100, 115, 255), rgb(80, 90, 200)) !important;
+    --zen-primary-color: light-dark(rgb(90, 125, 255), rgb(60, 90, 220)) !important;
     --toolbox-textcolor: color-mix(in srgb, currentColor 95%, transparent) !important;
     --zen-workspace-indicator-height: 42px;
   }
 
   --toolbar-field-background-color: var(--zen-colors-input-bg) !important;
-  --arrowpanel-background: light-dark(rgb(244, 244, 244), rgb(31, 31, 31)) !important;
+  --arrowpanel-background: light-dark(rgb(244, 244, 244), rgb(18, 18, 20)) !important;
 
   --panel-separator-color: color-mix(in srgb, currentColor 15%, transparent) !important;
 
