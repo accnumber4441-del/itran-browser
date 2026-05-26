@@ -97,9 +97,9 @@ jobs:
           export SURFER_PLATFORM="linux"
           export ZEN_RELEASE=1
           mkdir -p ~/.zen-keys
-          echo "" > ~/.zen-keys/safebrowsing.dat
-          echo "" > ~/.zen-keys/mozilla.dat
-          echo "" > ~/.zen-keys/google_location_service.dat
+          echo "no" > ~/.zen-keys/safebrowsing.dat
+          echo "no" > ~/.zen-keys/mozilla.dat
+          echo "no" > ~/.zen-keys/google_location_service.dat
           if command -v Xvfb &> /dev/null; then
             Xvfb :2 -nolisten tcp -noreset -screen 0 1024x768x24 &
             export DISPLAY=:2
@@ -246,9 +246,9 @@ jobs:
           export ZEN_CROSS_COMPILING=1
           export ZEN_RELEASE=1
           mkdir -p ~/.zen-keys
-          echo "" > ~/.zen-keys/safebrowsing.dat
-          echo "" > ~/.zen-keys/mozilla.dat
-          echo "" > ~/.zen-keys/google_location_service.dat
+          echo "no" > ~/.zen-keys/safebrowsing.dat
+          echo "no" > ~/.zen-keys/mozilla.dat
+          echo "no" > ~/.zen-keys/google_location_service.dat
           ulimit -n 4096
           npm run build
 
