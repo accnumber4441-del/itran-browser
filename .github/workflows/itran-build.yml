@@ -92,7 +92,7 @@ jobs:
         env:
           SURFER_COMPAT: x86_64
           ZEN_RELEASE_BRANCH: ${{ inputs.branch }}
-        continue-on-error: true
+          ZEN_GA_DISABLE_PGO: true
         run: |
           export SURFER_PLATFORM="linux"
           export ZEN_RELEASE=1
@@ -135,7 +135,6 @@ jobs:
     steps:
       - name: Free Disk Space
         uses: jlumbroso/free-disk-space@main
-        if: ${{ !(inputs.generate-gpo && matrix.arch == 'aarch64') }}
         with:
           tool-cache: false
 
@@ -240,6 +239,7 @@ jobs:
         env:
           SURFER_COMPAT: x86_64
           ZEN_RELEASE_BRANCH: ${{ inputs.branch }}
+          ZEN_GA_DISABLE_PGO: true
         run: |
           dos2unix configs/windows/mozconfig
           export SURFER_PLATFORM="win32"
