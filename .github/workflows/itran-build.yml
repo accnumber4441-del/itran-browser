@@ -1,0 +1,293 @@
+name: Itran Browser Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag (e.g. 1.0.0)"
+        required: true
+        default: "1.0.0"
+      branch:
+        description: "Release branch"
+        required: true
+        default: "release"
+        type: choice
+        options:
+          - release
+          - twilight
+
+jobs:
+  build-linux:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    name: Build Linux x86_64
+    env:
+      CARGO_TERM_COLOR: always
+      CARGO_INCREMENTAL: 0
+
+    steps:
+      - name: Free Disk Space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ github.token }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Setup Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update --fix-missing
+          sudo apt-get install -y python3 python3-pip dos2unix yasm nasm build-essential \
+            libgtk2.0-dev libpython3-dev m4 uuid libasound2-dev libcurl4-openssl-dev \
+            libdbus-1-dev libdrm-dev libdbus-glib-1-dev libgtk-3-dev libpulse-dev \
+            libx11-xcb-dev libxt-dev xvfb lld llvm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Load Surfer CI setup
+        run: npm run surfer -- ci --brand ${{ inputs.branch }} --display-version ${{ inputs.version }}
+
+      - name: Download Firefox source and dependencies
+        run: npm run download
+
+      - name: Fix Rust version
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain $(cat .rust-toolchain)
+          source $HOME/.cargo/env
+          rustup target add x86_64-unknown-linux-gnu
+
+      - name: Import
+        env:
+          SURFER_COMPAT: x86_64
+        run: |
+          . "$HOME/.cargo/env"
+          npm run import
+
+      - name: Build language packs
+        run: sh scripts/download-language-packs.sh
+
+      - name: Bootstrap
+        run: |
+          cd engine
+          export SURFER_PLATFORM="linux"
+          ./mach --no-interactive bootstrap --application-choice browser
+          cd ..
+
+      - name: Build
+        env:
+          SURFER_COMPAT: x86_64
+          ZEN_RELEASE_BRANCH: ${{ inputs.branch }}
+        continue-on-error: true
+        run: |
+          export SURFER_PLATFORM="linux"
+          export ZEN_RELEASE=1
+          mkdir -p ~/.zen-keys
+          echo "" > ~/.zen-keys/safebrowsing.dat
+          echo "" > ~/.zen-keys/mozilla.dat
+          echo "" > ~/.zen-keys/google_location_service.dat
+          if command -v Xvfb &> /dev/null; then
+            Xvfb :2 -nolisten tcp -noreset -screen 0 1024x768x24 &
+            export DISPLAY=:2
+          fi
+          ulimit -n 4096
+          npm run build
+
+      - name: Package
+        env:
+          SURFER_COMPAT: x86_64
+        run: |
+          export SURFER_PLATFORM="linux"
+          export ZEN_RELEASE=1
+          npm run package
+          mv dist/zen-*.tar.xz "itran.linux-x86_64.tar.xz"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          retention-days: 5
+          name: itran.linux-x86_64.tar.xz
+          path: ./itran.linux-x86_64.tar.xz
+
+  build-windows:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    name: Build Windows x86_64
+    env:
+      CARGO_TERM_COLOR: always
+      CARGO_INCREMENTAL: 0
+
+    steps:
+      - name: Free Disk Space
+        uses: jlumbroso/free-disk-space@main
+        if: ${{ !(inputs.generate-gpo && matrix.arch == 'aarch64') }}
+        with:
+          tool-cache: false
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ github.token }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Setup Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          sudo apt-get update
+          sudo apt-get install -y python3 python3-pip dos2unix yasm nasm build-essential \
+            libgtk2.0-dev libpython3-dev m4 uuid libasound2-dev libcurl4-openssl-dev \
+            libdbus-1-dev libdrm-dev libdbus-glib-1-dev libgtk-3-dev libpulse-dev \
+            libx11-xcb-dev libxt-dev xvfb lld llvm
+
+      - name: Load Surfer CI setup
+        run: npm run surfer -- ci --brand ${{ inputs.branch }} --display-version ${{ inputs.version }}
+
+      - name: Download Firefox and dependencies
+        run: npm run download
+
+      - name: win-cross Cache
+        env:
+          SEGMENT_DOWNLOAD_TIMEOUT_MINS: 5
+        id: cache-win-cross
+        uses: actions/cache@v4
+        with:
+          path: ${HOME}/win-cross
+          key: win-cross
+
+      - name: Setup for Windows
+        if: steps.cache-win-cross.outputs.cache-hit != 'true'
+        run: |
+          set -x
+          mkdir -p ~/win-cross
+          cd engine/
+          sudo apt-get install python3-launchpadlib
+          sudo add-apt-repository ppa:savoury1/backports
+          sudo apt-get update
+          sudo apt-get install -y python3-pip autoconf autoconf2.13 automake bison \
+            build-essential cabextract curl cmake flex gawk gcc-multilib git gnupg jq \
+            libbz2-dev libexpat1-dev libffi-dev libncursesw5-dev libsqlite3-dev \
+            libssl-dev libtool libucl-dev libxml2-dev msitools ninja-build \
+            openssh-client p7zip-full pkg-config procps python3-requests python3-toml \
+            scons subversion tar unzip uuid uuid-dev wget zip zlib1g-dev aria2
+          aria2c "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/gecko.cache.level-1.toolchains.v3.linux64-wine.latest/artifacts/public%2Fbuild%2Fwine.tar.zst" -o wine.tar.zst
+          tar --zstd -xf wine.tar.zst -C ~/win-cross
+          rm wine.tar.zst
+          ./mach python --virtualenv build taskcluster/scripts/misc/get_vs.py build/vs/vs2026.yaml ~/win-cross/vs2026
+
+      - name: Import
+        env:
+          SURFER_COMPAT: x86_64
+        run: |
+          . "$HOME/.cargo/env"
+          npm run import -- --verbose
+
+      - name: Bootstrap
+        run: |
+          cd engine/
+          chmod -R +x "$(echo ~)/win-cross/vs2026" || true
+          cd ..
+          export SURFER_PLATFORM="win32"
+          npm run bootstrap
+          cd engine/
+          ls ~/.mozbuild/clang/lib/clang/
+          echo "export LIB=\"$(cd ~/.mozbuild/clang/lib/clang/* && cd lib/windows && pwd)\"" >> ../configs/common/mozconfig
+          cat ../configs/common/mozconfig
+          sudo apt-get update
+          sudo apt-get install dos2unix
+
+      - name: Setup Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain $(cat .rust-toolchain)
+          source $HOME/.cargo/env
+          rustup target add x86_64-pc-windows-msvc
+          WINDOWS_RS_VERSION=$(cat build/windows/.windows-rs-version)
+          cd engine/
+          cargo install cargo-download --locked
+          cargo download -x windows=$WINDOWS_RS_VERSION
+          export CARGO_INCREMENTAL=0
+          echo "" >> ../configs/common/mozconfig
+          echo "export MOZ_WINDOWS_RS_DIR=$(pwd)/windows-$WINDOWS_RS_VERSION" >> ../configs/common/mozconfig
+
+      - name: Build language packs
+        run: sh scripts/download-language-packs.sh
+
+      - name: Build
+        env:
+          SURFER_COMPAT: x86_64
+          ZEN_RELEASE_BRANCH: ${{ inputs.branch }}
+        run: |
+          dos2unix configs/windows/mozconfig
+          export SURFER_PLATFORM="win32"
+          export ZEN_CROSS_COMPILING=1
+          export ZEN_RELEASE=1
+          mkdir -p ~/.zen-keys
+          echo "" > ~/.zen-keys/safebrowsing.dat
+          echo "" > ~/.zen-keys/mozilla.dat
+          echo "" > ~/.zen-keys/google_location_service.dat
+          ulimit -n 4096
+          npm run build
+
+      - name: Package
+        env:
+          SURFER_COMPAT: x86_64
+        run: |
+          export SURFER_PLATFORM="win32"
+          export ZEN_CROSS_COMPILING=1
+          export ZEN_RELEASE=1
+          npm run package
+          mv ./dist/zen-*.en-US.win64.zip itran.win64.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          retention-days: 5
+          name: itran.win64.zip
+          path: ./itran.win64.zip
+
+  release:
+    needs: [build-linux, build-windows]
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    name: Create Release
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2.2.2
+        with:
+          token: ${{ github.token }}
+          tag_name: v${{ inputs.version }}
+          name: "Itran Browser v${{ inputs.version }}"
+          draft: false
+          prerelease: ${{ inputs.branch == 'twilight' }}
+          generate_release_notes: true
+          files: |
+            itran.linux-x86_64.tar.xz/*
+            itran.win64.zip/*
